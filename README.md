@@ -1,0 +1,2 @@
+# ParticleEffectsForCanvas
+利用canvas制作的粒子特效，它们拥有很多可控属性，需要在js文件中修改
