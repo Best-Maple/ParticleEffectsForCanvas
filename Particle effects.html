@@ -1,0 +1,236 @@
+<!--
+ * @Author: Best-Maple
+ * @Date: 2020-03-19 14:15:22
+ * @LastEditTime: 2020-03-20 19:25:58
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \Canvas粒子特效.html
+ -->
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>particle animation for canvas  </title>
+     <style>
+         *{
+             padding: 0;
+             margin: 0;
+         }
+         html,body{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: black;
+         }
+     </style>
+ </head>
+ <body>
+     <canvas id="666"></canvas>
+     <script>
+         var canvasName = document.getElementsByTagName("canvas")[0].id;
+         var canvas = document.getElementById(canvasName);
+             canvas.width = window.innerWidth;
+             canvas.height = window.innerHeight;
+         var ctx = canvas.getContext("2d");
+         // 移动范围最大宽度
+         var MaxWidth = canvas.width;
+         // 移动范围最大高度
+         var MaxHeight = canvas.height;
+         // 生成的数量
+         var initBallCount = 200;
+         // 球体对象数组
+         var BallArray = [];
+         // 球的移动速度范围
+         var MaxSpeed = 5 , MinSpeed = 0.5;
+         // 球的半径范围
+         var MaxRadius = 5 , MinRadius = 5;
+         // 重置范围: 允许球形超出边界的像素点 （isDetectCollision=false时生效）
+         var Target = 0;
+         // 是否启用碰撞检测
+         var isDetectCollision = true;
+         // 是否启用荧光效果
+         var isFluorescence = true;
+         /**
+          * @description: 初始化球体
+          * @return: void
+          */    
+         function Init() {
+            //球体默认移动方位 
+            let initIndex=0;
+            for (let i = 0; i < initBallCount; i++) {
+                // 循环
+                initIndex++;
+                // 如果超出第四象限  重置
+                if(initIndex>4){
+                    initIndex=0;
+                }
+                // 生成球体及对应属性
+                BallArray[i] = {
+                    // X轴坐标
+                    x : parseInt(Math.random()*(MaxWidth+1)),
+                    // Y轴坐标
+                    y : parseInt(Math.random()*(MaxHeight+1)),
+                    // 圆的半径
+                    r : parseInt(Math.random()*MaxRadius+MinRadius),
+                    // 圆的移速
+                    s : Math.random()*(MaxSpeed-MinSpeed),
+                    // 圆的颜色
+                    color : RandomForColor(),
+                    // 移动的象限方位
+                    direction:initIndex,
+                    // 创建帧
+                    draw : function(){
+                        ctx.fillStyle = this.color;
+                        ctx.shadowBlur = this.r*2;
+                        ctx.shadowColor =  isFluorescence?this.color:"rgba(0,0,0,0)";
+                        ctx.beginPath();
+                        ctx.arc(this.x,this.y,this.r,Math.PI*2,false);
+                        ctx.closePath();
+                        ctx.fill();
+                    },
+                    // 移动
+                    move:function(dir){
+                        let speed = this.s;
+                        // 根据球体自身的移动方向  执行对应的移动方法
+                        switch (dir) {
+                            // 第一象限 左上角移动
+                            case 1:{
+                                // x轴 与 y轴 均作减法  球体则向左上角移动
+                                this.x-=speed;
+                                this.y-=speed;
+                                // 判断是否需要检测碰撞
+                                if(isDetectCollision){
+                                    // 如果当前球体的 X轴位置加上圆的半径 就是圆的最左边 到了最小值 则判定为发生碰撞
+                                    if(this.x-this.r<=Target){
+                                        this.direction = 2; // 指定当前球体移动方向为右上角移动 下一帧生效
+                                    }
+                                    // 如果当前球体的 Y轴位置加上圆的半径 就是圆的最上边 到了最小值 则判定为发生碰撞
+                                    if(this.y-this.r<=Target){
+                                        this.direction = 3; // 指定当前球体移动方向为左下角移动 下一帧生效
+                                    }
+                                }else{
+                                    // 重置小球出现的位置
+                                    if(this.x<=Target){this.x = MaxWidth}
+                                    if(this.y<=Target){ this.x = MaxHeight}
+                                }
+		// 创建帧
+                                this.draw();
+                                break;
+                            }
+                            // 第二象限 右上角移动
+                            case 2:{
+                                this.x+=speed;
+                                this.y-=speed;
+                                if(isDetectCollision){
+                                    if(this.x+this.r>=MaxWidth){
+                                        this.direction = 1;
+                                    }
+                                    if(this.y-this.r<=Target){
+                                        this.direction = 4;
+                                    }
+                                }else{
+                                    if(this.x>MaxWidth){this.x = 0}
+                                    if(this.y<=Target){this.y = MaxHeight}
+                                }
+                                this.draw();
+                                break;
+                            }
+                            // 第三象限 左下角移动 
+                            case 3:{
+                                this.x-=speed;
+                                this.y+=speed;
+                                if(isDetectCollision){
+                                    if(this.x-this.r<=Target){
+                                        this.direction = 4;
+                                    }
+                                    if(this.y+this.r>=MaxHeight){
+                                        this.direction = 1;
+                                    }
+                                }else{
+                                    if(this.x<=Target){this.x = MaxWidth}
+                                    if(this.y>MaxHeight){this.y = 0}
+                                }
+                                this.draw();
+                                break;
+                            }
+                            // 第四象限 右下角移动
+                            case 4:{
+                                this.x+=speed;
+                                this.y+=speed;
+                                if(isDetectCollision){
+                                    if(this.x+this.r>=MaxWidth){
+                                        this.direction = 3;
+                                    }
+                                    if(this.y+this.r>=MaxHeight){
+                                        this.direction = 2;
+                                    }
+                                }else{
+                                    if(this.x>MaxWidth){this.x = 0}
+                                    if(this.y>MaxHeight){this.y = 0}
+                                }
+                                this.draw();
+                                break;   
+                            }
+                        }
+                    }
+                };
+                // 初始化完成后创建帧
+                BallArray[i].draw();
+            }
+            // 所有球体创建完成之后 循环执行球体的移动方法
+            Animate();
+         }
+         /**
+          * @description: 生成随机的RGBA颜色码
+          * @param alpha {float} 
+          * @return: RGBA color
+          */
+         function RandomForColor(alpha) {
+            let r = parseInt(Math.random()*255),
+                g = parseInt(Math.random()*255),
+                b = parseInt(Math.random()*255);
+            let a = alpha??1;
+            return `rgba(${r},${g},${b},${a})`;
+         }
+         /**
+          * @description: 循环执行移动方法
+          * @return: void
+          */
+         function Animate() {
+            ctx.clearRect(0,0,MaxWidth,MaxHeight);
+            for (var i in BallArray) {
+                let ball = BallArray[i];
+                ball.move(ball.direction);
+            }
+            requestAnimationFrame(Animate);
+         }       
+         /**
+          * @description: 防抖
+          * @param deplly {function} 需要监听执行的方法
+          * @param time {number} 防抖检测时间/毫秒
+          * @return: void
+          */
+         function AntiShake(deplly,time){
+            var t = null;
+            return ()=>{
+                if(!t){
+                    t = setTimeout(() => {
+                        deplly();
+                    }, time);
+                }else{
+                    clearTimeout(t);
+                }
+            }
+         }
+         window.onload = AntiShake(Init,200);
+         window.onresize = function(){
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            MaxWidth = canvas.width;
+            MaxHeight = canvas.height;
+            AntiShake(Init,200);
+         };
+     </script>
+ </body>
+ </html>
